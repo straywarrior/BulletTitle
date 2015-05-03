@@ -58,29 +58,54 @@ namespace BulletTitle
                 getListRequest.Method = "POST";
                 getListRequest.ContentType = "application/x-www-form-urlencoded";
                 getListRequest.ContentLength = Encoding.GetEncoding("utf-8").GetByteCount(requestStr);
-
-                Stream getListRequestStream = getListRequest.GetRequestStream();
-                getListRequestStream.Write(requestBytes, 0, requestBytes.Length);
-                getListRequestStream.Close();
-
-                HttpWebResponse getListResponse = (HttpWebResponse)getListRequest.GetResponse();
-                Stream getListResponseStream = getListResponse.GetResponseStream();
-                StreamReader reader = new StreamReader(getListResponseStream, Encoding.GetEncoding("utf-8"));
-                string listStr = reader.ReadToEnd();
-
-                XmlDocument listDoc = new XmlDocument();
-                listDoc.LoadXml(listStr);
-                XmlNodeList listNodeList = listDoc.GetElementsByTagName("row");
-                for (int i = 0; i < listNodeList.Count; ++i)
+                
+                try
                 {
-                    XmlNode bullet_text = listNodeList[i].SelectSingleNode("text");
-                    XmlNode bullet_time = listNodeList[i].SelectSingleNode("time");
-                    XmlNode bullet_pos = listNodeList[i].SelectSingleNode("pos");
-                    BulletItem bullet_item = new BulletItem(bullet_text.InnerText, 0, int.Parse(bullet_pos.InnerText));
-                    bulletQ.Enqueue(bullet_item);
-                    
+                    Stream getListRequestStream = getListRequest.GetRequestStream();
+                    getListRequestStream.Write(requestBytes, 0, requestBytes.Length);
+                    getListRequestStream.Close();
                 }
-                Thread.Sleep(5000);
+                catch (System.Exception)
+                {
+                    errorlog(DateTime.Now.ToString() + "  Error in Network Connection \r\n");
+                    continue;
+                }
+
+                string listStr = "";
+                try
+                {
+                    HttpWebResponse getListResponse = (HttpWebResponse)getListRequest.GetResponse();
+                    Stream getListResponseStream = getListResponse.GetResponseStream();
+                    StreamReader reader = new StreamReader(getListResponseStream, Encoding.GetEncoding("utf-8"));
+                    listStr = reader.ReadToEnd();
+                }
+                catch(System.Exception)
+                {
+                    errorlog(DateTime.Now.ToString() + "  Error in getting Response from server");
+                    continue;
+                }
+                try
+                {
+                    XmlDocument listDoc = new XmlDocument();
+                    listDoc.LoadXml(listStr);
+                    XmlNodeList listNodeList = listDoc.GetElementsByTagName("row");
+                    for (int i = 0; i < listNodeList.Count; ++i)
+                    {
+                        XmlNode bullet_text = listNodeList[i].SelectSingleNode("text");
+                        XmlNode bullet_time = listNodeList[i].SelectSingleNode("time");
+                        XmlNode bullet_pos = listNodeList[i].SelectSingleNode("pos");
+                        BulletItem bullet_item = new BulletItem(bullet_text.InnerText, 0, int.Parse(bullet_pos.InnerText));
+                        bulletQ.Enqueue(bullet_item);
+
+                    }
+                }
+                catch (System.Exception)
+                {
+                    errorlog(DateTime.Now.ToString() + "  Error in parsing XML packet from server");
+                    continue;
+                }
+                
+                Thread.Sleep(10000);
             }
         }
 
@@ -107,7 +132,7 @@ namespace BulletTitle
             {
                 CleanDelegate clean = new CleanDelegate(cleanTextBlock);
                 this.Dispatcher.Invoke(clean);
-                Thread.Sleep(950);
+                Thread.Sleep(1000);
             }
             
         }
@@ -138,6 +163,15 @@ namespace BulletTitle
                 }
             }
             
+        }
+
+        public void errorlog(string text)
+        {
+            FileStream fs = new FileStream("error.log", FileMode.Append);
+            StreamWriter sw = new StreamWriter(fs, Encoding.GetEncoding("utf-8"));
+            sw.Write(text);
+            sw.Close();
+            fs.Close();
         }
     }
 }
