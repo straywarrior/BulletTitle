@@ -16,7 +16,7 @@ using System.Windows.Media.Animation;
 
 namespace BulletTitle
 {
-    class BulletItem
+    public class BulletItem
     {
         public string bullet_text;
         public Int64 bullet_time;
@@ -35,7 +35,8 @@ namespace BulletTitle
                     TextBlock newobj = (TextBlock)obj;
                     ThicknessAnimation thickAnimation = new ThicknessAnimation();
                     thickAnimation.From = newobj.Margin;
-                    thickAnimation.To = new Thickness(-1.1*(System.Windows.SystemParameters.PrimaryScreenWidth), newobj.Margin.Top, newobj.Margin.Right, newobj.Margin.Bottom);
+                    thickAnimation.To = new Thickness(-1*(System.Windows.SystemParameters.PrimaryScreenWidth), newobj.Margin.Top, newobj.Margin.Right, newobj.Margin.Bottom);
+                    //thickAnimation.To = new Thickness(0, newobj.Margin.Top, newobj.Margin.Right, newobj.Margin.Bottom);
                     double corrFactor = 20.0 / (newobj.Text.Length);
                     corrFactor = corrFactor > 1 ? 1 : corrFactor;
                     thickAnimation.Duration = new Duration(TimeSpan.FromSeconds(15 * corrFactor));

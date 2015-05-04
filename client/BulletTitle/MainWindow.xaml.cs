@@ -28,7 +28,7 @@ namespace BulletTitle
         Queue<BulletItem> bulletQ = new Queue<BulletItem>();
         Queue<TextBlock> boxQ = new Queue<TextBlock>();
         Random randMan = new Random();
-        delegate void PubDelegate(string val);
+        delegate void PubDelegate(BulletItem val);
         delegate void CleanDelegate();
         public MainWindow()
         {
@@ -44,7 +44,7 @@ namespace BulletTitle
             puber.Start();
             Thread cleaner = new Thread(bulletCleaner);
             cleaner.Start();
-
+            
         }
 
         public void bulletReceiver()
@@ -81,27 +81,36 @@ namespace BulletTitle
                 }
                 catch(System.Exception)
                 {
-                    errorlog(DateTime.Now.ToString() + "  Error in getting Response from server");
+                    errorlog(DateTime.Now.ToString() + "  Error in getting Response from server \r\n");
                     continue;
                 }
                 try
                 {
                     XmlDocument listDoc = new XmlDocument();
                     listDoc.LoadXml(listStr);
-                    XmlNodeList listNodeList = listDoc.GetElementsByTagName("row");
-                    for (int i = 0; i < listNodeList.Count; ++i)
+                    XmlNodeList total_row = listDoc.GetElementsByTagName("total_row");
+                    if (int.Parse(total_row[0].InnerText) > 0)
                     {
-                        XmlNode bullet_text = listNodeList[i].SelectSingleNode("text");
-                        XmlNode bullet_time = listNodeList[i].SelectSingleNode("time");
-                        XmlNode bullet_pos = listNodeList[i].SelectSingleNode("pos");
-                        BulletItem bullet_item = new BulletItem(bullet_text.InnerText, 0, int.Parse(bullet_pos.InnerText));
-                        bulletQ.Enqueue(bullet_item);
+                        XmlNodeList listNodeList = listDoc.GetElementsByTagName("row");
+                        for (int i = 0; i < listNodeList.Count; ++i)
+                        {
+                            XmlNode bullet_text = listNodeList[i].SelectSingleNode("text");
+                            XmlNode bullet_time = listNodeList[i].SelectSingleNode("time");
+                            XmlNode bullet_pos = listNodeList[i].SelectSingleNode("pos");
+                            BulletItem bullet_item = new BulletItem(bullet_text.InnerText, 0, int.Parse(bullet_pos.InnerText));
+                            bulletQ.Enqueue(bullet_item);
 
+                        }
                     }
+                    else
+                    {
+                        errorlog(DateTime.Now.ToString() + "  No bullets got from server \r\n");
+                    }
+                    
                 }
                 catch (System.Exception)
                 {
-                    errorlog(DateTime.Now.ToString() + "  Error in parsing XML packet from server");
+                    errorlog(DateTime.Now.ToString() + "  Error in parsing XML packet from server \r\n");
                     continue;
                 }
                 
@@ -118,8 +127,8 @@ namespace BulletTitle
                 if (bulletQ.Count > 0)
                 {
                     BulletItem bullet_to_pub = bulletQ.Dequeue();
-                    string bullet_text = bullet_to_pub.bullet_text;
-                    this.Dispatcher.Invoke(pub, bullet_text);
+                    //string bullet_text = bullet_to_pub.bullet_text;
+                    this.Dispatcher.Invoke(pub, bullet_to_pub);
                 }
                 Thread.Sleep(1000);
                
@@ -128,24 +137,25 @@ namespace BulletTitle
 
         public void bulletCleaner()
         {
+            CleanDelegate clean = new CleanDelegate(cleanTextBlock);
             while (true)
             {
-                CleanDelegate clean = new CleanDelegate(cleanTextBlock);
                 this.Dispatcher.Invoke(clean);
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
             
         }
 
-        public void setTextBlock(string val)
+        public void setTextBlock(BulletItem val)
         {
             TextBlock bullet_text_box = new TextBlock();
-            bullet_text_box.Text = val;
-            //bullet_text_box.Width = 1.1 * System.Windows.SystemParameters.PrimaryScreenWidth;
+            bullet_text_box.Text = val.bullet_text;
+            //bullet_text_box.Width = val.bullet_text.Length * 33;
             bullet_text_box.Height = 50;
             bullet_text_box.FontSize = 33;
             bullet_text_box.Foreground = BulletItem.getColor(randMan.Next(1, 1000));
             bullet_text_box.Margin = new Thickness(System.Windows.SystemParameters.PrimaryScreenWidth, -System.Windows.SystemParameters.PrimaryScreenHeight+150+randMan.Next(1,9)*50, 0, 0);
+            //bullet_text_box.Margin = new Thickness(0, -System.Windows.SystemParameters.PrimaryScreenHeight + 150 + randMan.Next(1, 9) * 50, 0, 0);
             gridRoot.Children.Add(bullet_text_box);
             BulletItem.runBullet(bullet_text_box);
             boxQ.Enqueue(bullet_text_box);
@@ -156,7 +166,7 @@ namespace BulletTitle
             if (boxQ.Count > 0)
             {
                 TextBlock obj_to_delete = boxQ.Peek();
-                if (obj_to_delete.Margin.Left < -System.Windows.SystemParameters.PrimaryScreenWidth)
+                if (obj_to_delete.Margin.Left < -System.Windows.SystemParameters.PrimaryScreenWidth / 2)
                 {
                     gridRoot.Children.Remove(obj_to_delete);
                     boxQ.Dequeue();
@@ -171,7 +181,7 @@ namespace BulletTitle
             StreamWriter sw = new StreamWriter(fs, Encoding.GetEncoding("utf-8"));
             sw.Write(text);
             sw.Close();
-            fs.Close();
+            //fs.Close();
         }
     }
 }
