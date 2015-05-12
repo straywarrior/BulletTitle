@@ -1,0 +1,26 @@
+{% extends "bullet_base.html" %}
+{% block title %} 化装师 {% endblock %}   
+{% block article %} 
+
+<p>This page is for bullettitle to send </p>
+{% if status %}
+<p class="bg-success">
+   {{ status }}
+</p>
+{% endif %}
+<form action="" method="post">
+    <div class="form-group">
+        <label for="id_text">Text: </label>
+        {% if form.bullet_text.errors %}
+        <div class="bg-danger">
+            {{ form.bullet_text.errors }}          
+        </div>
+        {% endif %}
+        {{ form.bullet_text }}
+    </div>
+    <div class="form-actions">
+        <input class="btn btn-primary" type="submit" value="Submit">
+        <input class="btn btn-primary" type="reset" value="Reset">
+    </div>
+</form>
+{% endblock %}
