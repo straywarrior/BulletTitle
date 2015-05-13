@@ -245,3 +245,6 @@ docs/_build/
 *.opt
 # PyBuilder
 target/
+
+
+settings.py

@@ -1,13 +1,17 @@
 {% extends "bullet_base.html" %}
 {% block title %} 化装师 {% endblock %}   
 {% block article %} 
-
+<div>
 <p>This page is for bullettitle to send </p>
+</div>
 {% if status %}
+<div>
 <p class="bg-success">
    {{ status }}
 </p>
+</div>
 {% endif %}
+<div>
 <form action="" method="post">
     <div class="form-group">
         <label for="id_text">Text: </label>
@@ -23,4 +27,5 @@
         <input class="btn btn-primary" type="reset" value="Reset">
     </div>
 </form>
+</div>
 {% endblock %}

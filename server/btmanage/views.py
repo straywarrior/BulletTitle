@@ -17,7 +17,6 @@ sys.setdefaultencoding('utf-8')
 def getlist(request):
     all_items = BulletItem.objects.all()
     total_row = len(all_items)
-    #data_json = json.dumps(all_items)
     response = HttpResponse()
     response.write('<?xml version="1.0" encoding="UTF-8"?><bullets>')
     response.write('<info><total_row>'+str(total_row)+'</total_row></info>')
